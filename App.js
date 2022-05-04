@@ -1,8 +1,10 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import React, { Component } from "react";
+import { View, Text } from "react-native";
 
 import firebase from "firebase/compat/app";
 // import "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -28,31 +30,68 @@ import LoginScreen from "./components/auth/Login";
 
 const Stack = createStackNavigator();
 
-export default function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Landing">
-        <Stack.Screen
-          name="Landing"
-          component={LandingScreen}
-          options={{ headerShown: false }}
-        />
+export class App extends Component {
+  constructor(props) {
+    super(props);
 
-        {/* Register */}
-        <Stack.Screen name="Register" component={RegisterScreen} />
+    this.state = {
+      loggedIn: false,
+      loaded: false,
+    };
+  }
 
-        {/* Login */}
-        <Stack.Screen name="Login" component={LoginScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+  componentDidMount() {
+    onAuthStateChanged(getAuth(), (user) => {
+      if (!user) {
+        this.setState({
+          loggedIn: false,
+          loaded: true,
+        });
+      } else {
+        this.setState({
+          loggedIn: true,
+          loaded: true,
+        });
+      }
+    });
+  }
+
+  render() {
+    const { loggedIn, loaded } = this.state;
+    if (!loaded) {
+      return (
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <Text>Loading...</Text>
+        </View>
+      );
+    }
+
+    if (!loggedIn) {
+      return (
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="Landing">
+            <Stack.Screen
+              name="Landing"
+              component={LandingScreen}
+              options={{ headerShown: false }}
+            />
+
+            {/* Register */}
+            <Stack.Screen name="Register" component={RegisterScreen} />
+
+            {/* Login */}
+            <Stack.Screen name="Login" component={LoginScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      );
+    }
+
+    return (
+      <View style={{ flex: 1, justifyContent: "center" }}>
+        <Text>User is logged in</Text>
+      </View>
+    );
+  }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
+export default App;
